@@ -1,0 +1,32 @@
+
+#Read-in dataset
+dataset <- read.csv("GEDEvent_v23_1.csv")
+
+#Create sequence of years
+year_l <- unique(dataset$year)
+
+#Create a list of events per year
+yr <- lapply(year_l, function(x){
+  dataset[dataset$year == x,]
+})
+names(yr) <- year_l
+
+#Create raster
+library(raster)
+r <- raster(xmn=-180, xmx=180, ymn=-90, ymx=90, res=0.1)
+values(r) <- 0
+plot(r)
+
+#Rasterize
+library(geodata)
+library(terra)
+library(sf)
+library(rnaturalearth)
+cl <- ne_coastline(scale = "medium", returnclass = "sf")
+
+PA_raster <- rasterize(yr[[1]][,c("longitude", "latitude")],
+                       r, field=1)
+PA_raster <- merge(PA_raster,r)
+
+r2 <- terra::crop(x= PA_raster, y = cl, mask = TRUE)
+
