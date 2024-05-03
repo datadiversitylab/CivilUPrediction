@@ -5,6 +5,7 @@ library(rvest)
 library(here)
 library(R.utils)
 library(pbapply)
+library(terra)
 
 options(timeout=300)
 
