@@ -6,3 +6,8 @@ GEDEvent_v23_1.csv
 ged231-csv.zip
 CivilUPrediction.Rproj
 GED/rasters/*
+.DS_Store
+CRU_tmp/nc/*
+CRU_tmp/rasters/*
+CRU_prc/nc/*
+CRU_prc/rasters/*
