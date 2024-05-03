@@ -4,6 +4,7 @@ library(xml2)
 library(rvest)
 library(here)
 library(R.utils)
+library(pbapply)
 
 options(timeout=300)
 
