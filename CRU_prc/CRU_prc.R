@@ -11,12 +11,12 @@ library(terra)
 options(timeout=300)
 
 #Scrape CRU for links for cru_ts_4.07
-URL <- "https://crudata.uea.ac.uk/cru/data/hrg/cru_ts_4.07/cruts.2304141047.v4.07/prc/"
+URL <- "https://crudata.uea.ac.uk/cru/data/hrg/cru_ts_4.07/cruts.2304141047.v4.07/pre/"
 pg <- read_html(URL)
 links <- html_attr(html_nodes(pg, "a"), "href")
-targetLinks <- links[grep(".prc.dat.nc.gz", links)]
+targetLinks <- links[grep(".pre.dat.nc.gz", links)]
 c_targetLinks <- lapply(targetLinks, function(x){
-  paste0("https://crudata.uea.ac.uk/cru/data/hrg/cru_ts_4.07/cruts.2304141047.v4.07/prc/", x)
+  paste0("https://crudata.uea.ac.uk/cru/data/hrg/cru_ts_4.07/cruts.2304141047.v4.07/pre/", x)
 })
 
 #download all the dat.nc files locally
