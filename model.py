@@ -38,11 +38,22 @@ if __name__ == '__main__':
     # TODO: check that all years have the same datasets available
     for f in files:
         # TODO: if no year, mark as used for all years
-        year = int(os.path.basename(f)[:4])
+        try:
+            year = int(os.path.basename(f)[:4])
+        except:
+            year = 'all'
         year_data[year].append(f)
         years.add(year)
-
-    years = sorted(years)
+    
+    if 'all' in years:
+        num_years = sorted([y for y in years if isinstance(y, int)])
+        for y in num_years:
+            year_data[y].extend(year_data['all'])
+            year_data[y] = sorted(year_data[y])
+        del year_data['all']
+        years = num_years
+    else: 
+        years = sorted(years)
 
     all_summary = []
     target_rasts = dict()
@@ -89,7 +100,6 @@ if __name__ == '__main__':
         acc_train = sklearn.metrics.accuracy_score(ytrain, np.round(pred_train))
         auc_roc_train = sklearn.metrics.roc_auc_score(ytrain, np.round(pred_train))
         
-
         pred_test = model.predict(xtest)
         r2_test = sklearn.metrics.r2_score(ytest, pred_test)
         rmse_test = np.sqrt(sklearn.metrics.mean_squared_error(ytest, pred_test))
