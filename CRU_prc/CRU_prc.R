@@ -8,7 +8,7 @@ library(pbapply)
 library(terra)
 
 
-options(timeout=300)
+options(timeout=5000)
 
 #Scrape CRU for links for cru_ts_4.07
 URL <- "https://crudata.uea.ac.uk/cru/data/hrg/cru_ts_4.07/cruts.2304141047.v4.07/pre/"
