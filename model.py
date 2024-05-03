@@ -35,7 +35,9 @@ if __name__ == '__main__':
 
     year_data = defaultdict(list)
     years = set()
+    # TODO: check that all years have the same datasets available
     for f in files:
+        # TODO: if no year, mark as used for all years
         year = int(os.path.basename(f)[:4])
         year_data[year].append(f)
         years.add(year)
@@ -76,19 +78,25 @@ if __name__ == '__main__':
         y_save_test[year] = ytest
 
         np.random.seed(seed)
-        model = sklearn.ensemble.RandomForestRegressor() # TODO: vary model types
+        #model = sklearn.ensemble.RandomForestRegressor() # TODO: vary model types
+        model = sklearn.ensemble.RandomForestClassifier() # TODO: vary model types
         model.fit(xtrain, ytrain)
         models[year] = model
 
         pred_train = model.predict(xtrain)
         r2_train = sklearn.metrics.r2_score(ytrain, pred_train)
         rmse_train = np.sqrt(sklearn.metrics.mean_squared_error(ytrain, pred_train))
+        acc_train = sklearn.metrics.accuracy_score(ytrain, np.round(pred_train))
+        auc_roc_train = sklearn.metrics.roc_auc_score(ytrain, np.round(pred_train))
+        
 
         pred_test = model.predict(xtest)
         r2_test = sklearn.metrics.r2_score(ytest, pred_test)
         rmse_test = np.sqrt(sklearn.metrics.mean_squared_error(ytest, pred_test))
+        acc_test = sklearn.metrics.accuracy_score(ytest, np.round(pred_test))
+        auc_roc_test = sklearn.metrics.roc_auc_score(ytest, np.round(pred_test))
 
-        res = [year, 'RF', r2_train, r2_test, rmse_train, rmse_test]
+        res = [year, 'RF', r2_train, r2_test, rmse_train, rmse_test, acc_train, acc_test, auc_roc_train, auc_roc_test]
         print(res)
         all_summary.append(res)
         pred_all_raster = np.array(model.predict(x).reshape([1,width,height]), dtype=np.float32)
@@ -97,7 +105,7 @@ if __name__ == '__main__':
         with rasterio.open(f'{output}/{year}_pred.tif', 'w', width=width, height=height, count=1,dtype=np.float32, crs=crs) as f2:
             f2.write(pred_all_raster)
 
-    summary = pd.DataFrame(all_summary, columns=['Year', 'Model', 'R2_train', 'R2_test', 'RMSE_train', 'RMSE_test'])
+    summary = pd.DataFrame(all_summary, columns=['Year', 'Model', 'R2_train', 'R2_test', 'RMSE_train', 'RMSE_test', 'Acc_train', 'Acc_test', 'ROC_AUC_train', 'ROC_AUC_test'])
     summary.to_csv(f'{output}/summary.csv', index=False)
 
     # plot the preds and target by year
@@ -105,32 +113,18 @@ if __name__ == '__main__':
     # compare year i to j
     r2_offyear = np.zeros((len(years), len(years)), dtype=np.float32)
     rmse_offyear = np.zeros((len(years), len(years)), dtype=np.float32)
+    acc_offyear = np.zeros((len(years), len(years)), dtype=np.float32)
+    auc_roc_offyear = np.zeros((len(years), len(years)), dtype=np.float32)
     for i,iyear in enumerate(years):
         for j,jyear in enumerate(years):
             pred = models[iyear].predict(x_save_test[jyear])
             r2_offyear[i,j] = sklearn.metrics.r2_score(y_save_test[jyear], pred)
             rmse_offyear[i,j] = np.sqrt(sklearn.metrics.mean_squared_error(y_save_test[jyear], pred))
+            acc_offyear[i,j] = sklearn.metrics.accuracy_score(y_save_test[jyear], pred)
+            auc_roc_offyear[i,j] = sklearn.metrics.roc_auc_score(y_save_test[jyear], np.round(pred))
 
-    sns.heatmap(r2_offyear, vmin=0, vmax=1, cbar=True, xticklabels=years, yticklabels=years)
-    #plt.pcolormesh(r2_offyear, vmin=0, vmax=1)
-    #plt.colorbar()
-    #locs, labs = plt.xticks()
-    #plt.xticks(locs, years)
-    #locs, labs = plt.yticks()
-    #plt.yticks(locs, years)
-    plt.title('$R^2$ for predictions across years')
-    plt.savefig(f'{output}/r2_years.png')
+    sns.heatmap(auc_roc_offyear, cbar=True, xticklabels=years, yticklabels=years)
+    #sns.heatmap(auc_roc_offyear, vmin=0, vmax=1, cbar=True, xticklabels=years, yticklabels=years)
+    plt.title('ROC-AUC for predictions across years')
+    plt.savefig(f'{output}/auc_roc_years.png')
     plt.close()
-
-    sns.heatmap(rmse_offyear, cbar=True, xticklabels=years, yticklabels=years)
-    #plt.pcolormesh(rmse_offyear, vmin=0)
-    #plt.colorbar()
-    #locs, labs = plt.xticks()
-    #plt.xticks(locs, years)
-    #locs, labs = plt.yticks()
-    #plt.yticks(locs, years)
-    plt.title('RMSE for predictions across years')
-    plt.savefig(f'{output}/rmse_years.png')
-
-
-
