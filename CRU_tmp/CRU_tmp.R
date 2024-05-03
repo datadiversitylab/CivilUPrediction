@@ -7,7 +7,7 @@ library(R.utils)
 library(pbapply)
 library(terra)
 
-options(timeout=300)
+options(timeout = 5000)
 
 #Scrape CRU for links for cru_ts_4.07
 URL <- "https://crudata.uea.ac.uk/cru/data/hrg/cru_ts_4.07/cruts.2304141047.v4.07/tmp/"
@@ -23,8 +23,7 @@ dir.create(here("CRU_tmp", "nc"))
 
 pblapply(seq_along(targetLinks), function(x){
   download.file(c_targetLinks[[x]], 
-                destfile = here("CRU_tmp", "nc", targetLinks[x]), 
-                overwrite = TRUE)
+                destfile = here("CRU_tmp", "nc", targetLinks[x]))
   gunzip(here("CRU_tmp", "nc", targetLinks[x]), overwrite = TRUE)
 })
 
