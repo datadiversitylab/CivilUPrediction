@@ -1,31 +1,48 @@
-setwd("C:/Users/jhanc/Downloads/rasters_data")
+setwd("C:/Users/jhanc/Box/Investigacion/Investigaciones/Side projects/Diversity_lab/CivilUnrest/Natural Disasters/Natural Disasters")
 
 library(stars)
 library(sf)
 library(units)
 
-## Resampling the map for Global Volcano Proportional Economic Loss Risk Deciles (gdvolpro)
-
-gdvolpro1 <- read_stars("C:/Users/jhanc/Downloads/rasters_data/gdvolpro.asc") # Here, we're reading the raster in .ASC format
-gdvolpro1
-
-write_stars(gdvolpro1, dsn = "C:/Users/jhanc/Downloads/rasters_data/gdvolpro1.tif", overwrite = T) ## Here, we're changing the format to .TIF and saving it, so it's easier to manage
-detect.driver("gddrgpro1.tif")
-
-gdvolpro1 <- read_stars("C:/Users/jhanc/Downloads/rasters_data/gdvolpro1.tif") ## Here we're reading the file we just created
-gdvolpro1
-
-plot(gdvolpro1, downsample = F)
-
-grid <- st_as_stars(st_bbox(gdvolpro1), dx = 0.1, dy = 0.1) ## Now we're changing the scale from 0.04° to 0.1°.
-grid
-#plot(grid, breaks = "equal", key.pos = 4)
+# List of the files
+files <- c("gdcyc", "gdcycgdp", "gdcycpro", "gddrg", "gddrggdp", 
+           "gddrgpro", "gdfld", "gdfldgdp", "gdfldmrt", "gdfldpro", 
+           "gdlnd", "gdlndgdp", "gdlndmrt", "gdmhz", "gdmhzgdp")
 
 
-gdvolpro2 <- st_warp(gdvolpro1, grid, method = "bilinear", 
-                     use_gdal = TRUE, no_data_value = -9999) ## resample the values of the gdvolpro1 raster into the new raster grid
-plot(gdvolpro2)
-gdvolpro2 ## Checking that it actually changed the scale
-
-write_stars(gdvolpro2, dsn = "C:/Users/jhanc/Downloads/rasters_data/gdvolpro2.tif", overwrite = T) ## Here, we're saving our new raster with the new resampling
-detect.driver("gdvolpro2.tif")
+for (file in files) {
+  # Define file paths
+  asc_file <- paste0(file, ".asc")  # Input .asc file
+  tif_file <- paste0(file, "1.tif") # Temporary .tif file
+  final_tif <- paste0(file, "2.tif") # Reprojected .tif file
+  
+  # Read .asc file
+  raster <- read_stars(asc_file)
+  
+  # Write as intermediate .tif
+  write_stars(raster, dsn = tif_file, overwrite = TRUE)
+  
+  # Reload the .tif
+  raster <- read_stars(tif_file)
+  
+  # Plot the original raster
+  # plot(raster, downsample = FALSE)
+  
+  # Create grid with a resolution of 0.1 x 0.1
+  grid <- st_as_stars(st_bbox(raster), dx = 0.1, dy = 0.1)
+  
+  # Warp (reproject) the raster to the new grid
+  raster_reprojected <- st_warp(raster, grid, method = "bilinear", 
+                                use_gdal = TRUE, no_data_value = -9999)
+  
+  # Plot the reprojected raster
+  # plot(raster_reprojected)
+  
+  # Save the final reprojected raster
+  write_stars(raster_reprojected, dsn = final_tif, overwrite = TRUE)
+  
+  # Detect the driver
+  detect.driver(final_tif)
+  
+  cat("Processed:", file, "\n")  # Check Progress
+}
